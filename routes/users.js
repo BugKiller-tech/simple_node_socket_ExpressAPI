@@ -16,6 +16,7 @@ router.get('/', function(req, res, next) {
 router.post('/new', async function(req, res, next) {
   try {
 
+    console.log(req.body);
     const foundUser = await User.findOne({ phoneNumber: req.body.phoneNumber });
 
     if (foundUser) {
