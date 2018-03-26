@@ -21,6 +21,11 @@ const schema = new mongoose.Schema({
   lng: {
     type: Schema.Types.Number,
     requried: true
+  },
+
+  uniqueId: {
+    type: Schema.Types.String,
+    required: true
   }
 })
 const User = mongoose.model('User', schema);

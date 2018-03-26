@@ -75,9 +75,17 @@ router.post('/delete', async function(req, res, next) {
   }
 })
 
-router.get('/all', async (req, res, next) => {
+router.post('/all', async (req, res, next) => {
+  
+  
+
   try {
-    const users = await User.find({});
+    var users = {};
+    if (req.body.uniqueId) {
+      users = await User.find({uniqueId: req.body.uniqueId})
+    } else {
+      users = await User.find({});
+    }
     return res.json({
       success: true,
       users: users
@@ -90,6 +98,7 @@ router.get('/all', async (req, res, next) => {
   }
 })
 
+// This route is only for test purpose of soccet emit
 router.get('/noty', async (req, res, next) => {
   global.io.emit('new user', {
     firstname: 'abc',
