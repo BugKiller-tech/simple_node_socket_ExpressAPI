@@ -28,7 +28,16 @@ router.post('/new', async function(req, res, next) {
         user: newUser
       })
     } else {
-      const user = await User.create(req.body);
+
+      const lastUser = await User.findOne().sort({ order: -1 });
+      console.log('Last User', lastUser);
+      var order = 1;
+      if (lastUser && lastUser.order) { order = lastUser.order + 1 };
+
+      var data = req.body;
+      data.order = order;
+
+      const user = await User.create(data);
       if (user) {
         global.io.sockets.emit('new user', user);
         return res.json({
@@ -77,15 +86,13 @@ router.post('/delete', async function(req, res, next) {
 })
 
 router.post('/all', async (req, res, next) => {
-  
-  
 
   try {
     var users = {};
     if (req.body.uniqueId) {
-      users = await User.find({uniqueId: req.body.uniqueId})
+      users = await User.find({uniqueId: req.body.uniqueId}).sort({ order: 1 });
     } else {
-      users = await User.find({});
+      users = await User.find({}).sort({ order: 1 });
     }
     return res.json({
       success: true,
@@ -98,6 +105,52 @@ router.post('/all', async (req, res, next) => {
     })
   }
 })
+
+router.post('/moveOrder', async (req, res, next) => {
+  try {
+    if (!req.body.fromOrder) {
+      return res.status(400).json({
+        success: false,
+        errors: 'Please provide fromOrder to move..'
+      })
+    }
+    if (!req.body.toOrder) {
+      return res.status(400).json({
+        success: false,
+        errors: 'Please provide toOrder to move..'
+      })
+    }
+
+    const moveUser = await User.findOne({ order: req.body.fromOrder});
+    
+    if (req.body.fromOrder > req.body.toOrder) {
+      await User.updateMany({ order: { $gte: req.body.toOrder, $lt: req.body.fromOrder } }, { $inc: { order: 1 } });
+    } else {
+      await User.updateMany({ order: { $gt: req.body.fromOrder, $lte: req.body.toOrder } }, { $inc: { order: -1 } });
+    }
+    moveUser.order = req.body.toOrder; 
+    await moveUser.save();
+
+
+
+
+    return res.json({
+      success: true,
+      message: 'Successfully moved'
+    })
+
+  } catch (err) {
+    return res.status(400).json({
+      success: false,
+      errors: 'Something went wrong catch block'
+    })
+  }
+
+});
+
+
+
+
 
 // This route is only for test purpose of soccet emit
 router.get('/noty', async (req, res, next) => {
@@ -113,5 +166,18 @@ router.get('/noty', async (req, res, next) => {
     message: 'sent noty'
   })
 });
+
+router.get('/lastOrder', async(req, res) => {
+  try {
+    const lastUser = await User.findOne().sort({ order : -1 });
+    res.json({
+      order: lastUser      
+    })
+  } catch (err) {
+  }
+})
+
+
+
 
 module.exports = router;

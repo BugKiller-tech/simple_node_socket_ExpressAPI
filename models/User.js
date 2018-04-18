@@ -22,6 +22,10 @@ const schema = new mongoose.Schema({
     type: Schema.Types.Number,
     requried: true
   },
+  order: {
+    type: Schema.Types.Number,
+    required: true
+  },
 
   uniqueId: {
     type: Schema.Types.String,
