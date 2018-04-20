@@ -15,7 +15,6 @@ router.get('/', function(req, res, next) {
 
 router.post('/new', async function(req, res, next) {
   try {
-
     console.log(req.body);
     const foundUser = await User.findOne({ phoneNumber: req.body.phoneNumber });
 
@@ -58,6 +57,34 @@ router.post('/new', async function(req, res, next) {
     })
   }
 });
+
+router.post('/update', async function(req, res) {
+  try {
+    const foundUser = await User.findOne({_id: req.body._id})
+    if (foundUser) {
+      const data = req.body;
+      delete data._id;
+
+      const newUser = await User.findOneAndUpdate({_id: foundUser._id}, data, { new: true });
+      global.io.sockets.emit('update user', newUser);
+      return res.json({
+        success: true,
+        user: newUser
+      })
+    } else {
+      return res.status(400).json({
+        success: false,
+        errors: 'Something went wrong'
+      })
+    }
+  } catch(err) {
+    return res.status(400).json({
+      success: false,
+      errors: 'Something went wrong catch block'
+    })
+  }
+})
+
 router.post('/delete', async function(req, res, next) {
   if (!req.body._id) {
     return res.status(400).json({
